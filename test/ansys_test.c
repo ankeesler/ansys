@@ -122,7 +122,8 @@ static void test_basic_boot(void) {
     equal_eventually(boot_ended, 0);
 
     input.stop = 1;
-    equal(pthread_join(sys_thread, NULL), 0);
+    err = pthread_join(sys_thread, NULL);
+    equal(err, 0);
 }
 
 static void test_create_one_task(void) {
@@ -141,7 +142,8 @@ static void test_create_one_task(void) {
     equal_eventually(a_ended, 0);
 
     input.stop = 1;
-    equal(pthread_join(sys_thread, NULL), 0);
+    err = pthread_join(sys_thread, NULL);
+    equal(err, 0);
 }
 
 static void test_create_two_tasks(void) {
@@ -161,12 +163,14 @@ static void test_create_two_tasks(void) {
     equal_eventually(b_started, 1);
     equal_eventually(b_ended, 0);
 
-    equal(pthread_cancel(sys_thread), 0);
+    input.stop = 1;
+    err = pthread_join(sys_thread, NULL);
+    equal(err, 0);
 }
 
 int main(int argc, char *argv[]) {
-    skip(test_basic_boot, 0);
-    run(test_create_one_task, 1);
-    skip(test_create_two_tasks, 0);
+    run(test_basic_boot, 0);
+    run(test_create_one_task, 0);
+    run(test_create_two_tasks, 0);
     return 0;
 }
