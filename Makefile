@@ -1,8 +1,9 @@
 ifeq ($(shell uname),Darwin)
 $(error "This code doesn't work on Mac OS")
-else
-CC=gcc
 endif
+
+CC=gcc
+CFLAGS=-g -Wall -Werror -O0 -Iinc
 
 all: help
 
@@ -11,21 +12,22 @@ help:
 	@echo "----"
 	@echo "test: run the tests"
 	@echo "clean: remove build artifacts"
+	@echo "run-example: run the example application in example/"
 
 bin:
 	mkdir $@
 
-bin/ansys_test.o: test/ansys_test.c | bin
-	$(CC) -o $@ -Iinc -g -Wall -Werror -O0 -c $^
+bin/%.o: test/%.c | bin
+	$(CC) -o $@ $(CFLAGS) -c $^
 
-bin/ansys.o: src/ansys.c | bin
-	$(CC) -o $@ -Iinc -g -Wall -Werror -Wno-deprecated-declarations -O0 -c $^
+bin/%.o: src/%.c | bin
+	$(CC) -o $@ $(CFLAGS) -c $^
 
 bin/ansys_test: bin/ansys.o bin/ansys_test.o
 	$(CC) -o $@ $^ -lpthread
 
 bin/example.o: example/example.c | bin
-	$(CC) -o $@ -Iinc -g -Wall -Werror -O0 -c $^
+	$(CC) -o $@ $(CFLAGS) -c $^
 
 bin/example: bin/ansys.o bin/example.o
 	$(CC) -o $@ $^

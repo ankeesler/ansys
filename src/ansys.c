@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define _XOPEN_SOURCE
 #include <ucontext.h>
 
 #if 0
