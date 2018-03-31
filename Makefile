@@ -1,4 +1,8 @@
-CC=clang
+ifeq ($(shell uname),Darwin)
+	CC=clang
+else
+	CC=gcc
+endif
 
 all: help
 
@@ -18,7 +22,7 @@ bin/ansys.o: src/ansys.c | bin
 	$(CC) -o $@ -Iinc -g -Wall -Werror -Wno-deprecated-declarations -O0 -c $^
 
 bin/ansys_test: bin/ansys.o bin/ansys_test.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lpthread
 
 bin/example.o: example/example.c | bin
 	$(CC) -o $@ -Iinc -g -Wall -Werror -O0 -c $^
