@@ -23,7 +23,7 @@ bin/%.o: test/%.c | bin
 bin/%.o: src/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
 
-bin/ansys_test: bin/ansys.o bin/ansys_test.o
+bin/ansys_test: bin/ansys.o bin/ansys_test.o bin/test.o
 	$(CC) -o $@ $^ -lpthread
 
 bin/example.o: example/example.c | bin

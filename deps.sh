@@ -5,3 +5,4 @@ set -ex
 apt update
 apt install gcc
 apt install make
+apt install gdb

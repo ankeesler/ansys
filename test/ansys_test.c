@@ -1,57 +1,11 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "ansys.h"
 
-#define TIMEOUT_S 2
-
-#define run(test, debug) \
-    do { \
-        __debug = (debug); \
-        fprintf(stderr, "TEST: %s\n", #test); \
-        (test)(); \
-    } while(0);
-#define skip(test, debug) (void)(test)
-
-#define __print_status(a, b, status, op) \
-    do { \
-        if (__debug) { \
-            fprintf(stderr, "  %s: %s (%d) %s %s (%d) @ %s:%d\n", (status), #a, (a), (op), #b, (b), __FILE__, __LINE__); \
-            fflush(stderr); \
-        } \
-    } while (0);
-
-#define __print_success(a, b) __print_status((a), (b), "PASS", "==")
-
-#define __print_failure(a, b) __print_status((a), (b), "FAIL", "!=")
-
-#define equal(a, b) \
-    do { \
-        if ((a) != (b)) { \
-            __print_failure((a), (b)); \
-            exit(1); \
-        } else { \
-            __print_success((a), (b)); \
-        } \
-    } while (0);
-
-#define equal_eventually(a, b) \
-    do { \
-        time_t now = time(NULL); \
-        do { \
-            sleep(1); \
-            if ((time(NULL) - now) > TIMEOUT_S) { \
-                __print_failure((a), (b)); \
-                exit(1); \
-            } \
-        } while((a) != (b)); \
-        __print_success((a), (b)); \
-    } while (0);
-
-static int __debug = 0;
+#include "test.h"
 
 static int a_started = 0;
 static int a_ended = 0;
