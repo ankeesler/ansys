@@ -1,7 +1,7 @@
 ifeq ($(shell uname),Darwin)
-	CC=clang
+$(error "This code doesn't work on Mac OS")
 else
-	CC=gcc
+CC=gcc
 endif
 
 all: help
