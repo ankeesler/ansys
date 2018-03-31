@@ -1,3 +1,5 @@
+CC=clang
+
 all: help
 
 help:
@@ -10,17 +12,27 @@ bin:
 	mkdir $@
 
 bin/ansys_test.o: test/ansys_test.c | bin
-	clang -o $@ -Iinc -g -Wall -Werror -O0 -c $^
+	$(CC) -o $@ -Iinc -g -Wall -Werror -O0 -c $^
 
 bin/ansys.o: src/ansys.c | bin
-	clang -o $@ -Iinc -g -Wall -Werror -Wno-deprecated-declarations -O0 -c $^
+	$(CC) -o $@ -Iinc -g -Wall -Werror -Wno-deprecated-declarations -O0 -c $^
 
 bin/ansys_test: bin/ansys.o bin/ansys_test.o
-	clang -o $@ $^
+	$(CC) -o $@ $^
+
+bin/example.o: example/example.c | bin
+	$(CC) -o $@ -Iinc -g -Wall -Werror -O0 -c $^
+
+bin/example: bin/ansys.o bin/example.o
+	$(CC) -o $@ $^
 
 .PHONY: test
 test: bin/ansys_test
 	./bin/ansys_test
+
+.PHONY: run-example
+run-example: bin/example
+	./$<
 
 .PHONY: clean
 clean:
