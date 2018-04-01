@@ -28,6 +28,8 @@ struct task {
 
 static struct task tasks[MAX_TASKS];
 static struct task *current_task;
+static volatile int sw_ctx = 0;
+static ucontext_t boot_ctx;
 
 static void init_tasks(void) {
     for (int i = 0; i < MAX_TASKS; i++) {
@@ -67,31 +69,44 @@ static struct task *find_next_task(void) {
     return best;
 }
 
-static void sched(struct task *next_task) {
-    static volatile int sw_ctx = 0;
-    if (current_task) {
-        assert(getcontext(&current_task->ctx) == 0);
-        if (sw_ctx) {
-            sw_ctx = 0;
-            return;
-        }
+static void ctxsw(struct task *next_task) {
+    assert(getcontext(&current_task->ctx) == 0);
+    if (sw_ctx) {
+        sw_ctx = 0;
+        return;
     }
-    
+
+    // This call will not return. Execution will transfer to ansys_boot()
+    // which will switch context again into the current_task. We are doing
+    // this because lateral context switches don't seem to be working.
     current_task = next_task;
-    if (current_task->started == 0) {
-        current_task->started = 1;
-        current_task->fcn(current_task->input);
-    } else {
-        sw_ctx = 1;
-        assert(setcontext(&current_task->ctx) == 0);
-    }
+    assert(setcontext(&boot_ctx) == 0);
 }
 
 int ansys_boot(void (*fcn)(void *), void *input) {
     init_tasks();
 
     struct task *boot_task = add_task(fcn, input, BOOT_TASK_PRIO);
-    sched(boot_task);
+    assert(getcontext(&boot_ctx) == 0);
+    if (current_task == NULL) {
+        // We returned from a normal call to getcontext. This should only
+        // happen once (at boot).
+        current_task = boot_task;
+        current_task->started = 1;
+        boot_task->fcn(boot_task->input);
+    } else {
+        // We returned from getcontext as a result of a setcontext in ctxsw().
+        // current_task should have been set in ctxsw() above.
+        if (current_task->started == 0) {
+            current_task->started = 1;
+            current_task->fcn(current_task->input);
+        } else {
+            // This call will not return. It will switch context into the
+            // getcontext in ctxsw().
+            sw_ctx = 1;
+            assert(setcontext(&current_task->ctx) == 0);
+        }
+    }
 
     return ERR_FAILURE;
 }
@@ -99,8 +114,7 @@ int ansys_boot(void (*fcn)(void *), void *input) {
 int ansys_create_task(void (*fcn)(void *), int prio) {
     add_task(fcn, NULL, prio);
 
-    struct task *next_task = find_next_task();
-    sched(next_task);
+    ctxsw(find_next_task());
 
     return ERR_SUCCESS;
 }
@@ -109,6 +123,6 @@ void ansys_yield(void) {
     current_task->ready = 0;
     struct task *next_task = find_next_task();
     current_task->ready = 1;
-    sched(next_task);
+    ctxsw(next_task);
 }
 
