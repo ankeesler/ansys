@@ -21,7 +21,7 @@ void __equal(int a, const char *a_name, int b, const char *b_name,
         const char *file, int line) {
     if (a != b) {
         __print_status(a, a_name, b, b_name, "FAIL", "==", file, line);
-        exit(1);
+        exit(67);
     } else {
         __print_status(a, a_name, b, b_name, "PASS", "==", file, line);
     }

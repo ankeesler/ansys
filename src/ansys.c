@@ -36,7 +36,7 @@ static void init_tasks(void) {
     current_task = NULL;
 }
 
-static void add_task(void (*fcn)(void *), void *input, int prio) {
+static struct task *add_task(void (*fcn)(void *), void *input, int prio) {
     for (int i = 0; i < MAX_TASKS; i++) {
         if (tasks[i].fcn == NULL) {
             tasks[i].fcn = fcn;
@@ -44,7 +44,7 @@ static void add_task(void (*fcn)(void *), void *input, int prio) {
             tasks[i].prio = prio;
             tasks[i].ready = 1;
             tasks[i].started = 0;
-            return;
+            return &tasks[i];
         }
     }
     assert("couldn't add task!" == NULL);
@@ -67,7 +67,7 @@ static struct task *find_next_task(void) {
     return best;
 }
 
-static void sched(void) {
+static void sched(struct task *next_task) {
     static volatile int sw_ctx = 0;
     if (current_task) {
         assert(getcontext(&current_task->ctx) == 0);
@@ -77,7 +77,7 @@ static void sched(void) {
         }
     }
     
-    current_task = find_next_task();
+    current_task = next_task;
     if (current_task->started == 0) {
         current_task->started = 1;
         current_task->fcn(current_task->input);
@@ -89,19 +89,26 @@ static void sched(void) {
 
 int ansys_boot(void (*fcn)(void *), void *input) {
     init_tasks();
-    add_task(fcn, input, BOOT_TASK_PRIO);
-    sched();
+
+    struct task *boot_task = add_task(fcn, input, BOOT_TASK_PRIO);
+    sched(boot_task);
+
     return ERR_FAILURE;
 }
 
 int ansys_create_task(void (*fcn)(void *), int prio) {
     add_task(fcn, NULL, prio);
-    sched();
+
+    struct task *next_task = find_next_task();
+    sched(next_task);
+
     return ERR_SUCCESS;
 }
 
 void ansys_yield(void) {
     current_task->ready = 0;
-    sched();
+    struct task *next_task = find_next_task();
+    current_task->ready = 1;
+    sched(next_task);
 }
 

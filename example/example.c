@@ -13,13 +13,15 @@ static void b_task(void *d) {
 static void a_task(void *d) {
     p("example: a_task: start\n");
     ansys_yield();
+    p("example: a_task: continuing\n");
+    ansys_yield();
     p("example: a_task: end\n");
 }
 
 static void boot_task(void *d) {
     p("example: boot_task: start\n");
-    ansys_create_task(a_task, 1);
-    ansys_create_task(b_task, 2);
+    ansys_create_task(a_task, 2);
+    ansys_create_task(b_task, 1);
     p("example: boot_task: end\n");
 }
 

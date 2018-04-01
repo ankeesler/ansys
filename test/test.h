@@ -24,5 +24,7 @@ void __equal(int a, const char *a_name, int b, const char *b_name,
         __print_status((a), #a, (b), #b, "PASS", "==", __FILE__, __LINE__); \
     } while (0);
 
+#define note(...) fprintf(stderr, __VA_ARGS__), fflush(stderr);
+
 void __print_status(int a, const char *a_name, int b, const char *b_name,
         const char *status, const char *op, const char *file, int line);

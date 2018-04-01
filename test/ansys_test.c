@@ -8,11 +8,15 @@
 #include "test.h"
 
 static int a_started = 0;
+static int a_continued = 0;
 static int a_ended = 0;
 static void a_task(void *d) {
     a_started = 1;
 
-    while (1) { ansys_yield(); }
+    while (1) {
+        ansys_yield();
+        a_continued = 1;
+    }
     a_ended = 1;
 }
 
@@ -20,8 +24,7 @@ static int b_started = 0;
 static int b_ended = 0;
 static void b_task(void *d) {
     b_started = 1;
-
-    while (1) { ansys_yield(); }
+    ansys_yield();
     b_ended = 1;
 }
 
@@ -32,6 +35,7 @@ struct boot_input {
     volatile int stop;
 };
 static int boot_started = 0;
+static int boot_continued = 0;
 static int boot_ended = 0;
 static void boot_task(void *input) {
     struct boot_input *bi = (struct boot_input *)input;
@@ -40,10 +44,11 @@ static void boot_task(void *input) {
     boot_started = 1;
 
     if (bi->tasks == 1) {
-        equal(ansys_create_task(a_task, 1), ERR_SUCCESS);
+        equal(ansys_create_task(a_task, 2), ERR_SUCCESS);
     } else if (bi->tasks == 2) {
-        equal(ansys_create_task(a_task, 1), ERR_SUCCESS);
-        equal(ansys_create_task(b_task, 2), ERR_SUCCESS);
+        equal(ansys_create_task(a_task, 2), ERR_SUCCESS);
+        boot_continued = 1;
+        equal(ansys_create_task(b_task, 1), ERR_SUCCESS);
     }
 
     while (1) {
@@ -109,13 +114,13 @@ static void test_create_two_tasks(void) {
     equal(err, 0);
 
     equal_eventually(boot_started, 1);
-    equal_eventually(boot_ended, 0);
-
     equal_eventually(a_started, 1);
-    equal_eventually(a_ended, 0);
-
+    equal_eventually(boot_continued, 1);
     equal_eventually(b_started, 1);
-    equal_eventually(b_ended, 0);
+    equal_eventually(a_continued, 1);
+    equal_eventually(b_ended, 1);
+    equal_eventually(a_ended, 0);
+    equal_eventually(boot_ended, 0);
 
     input.stop = 1;
     err = pthread_join(sys_thread, NULL);
@@ -125,6 +130,6 @@ static void test_create_two_tasks(void) {
 int main(int argc, char *argv[]) {
     run(test_basic_boot, 0);
     run(test_create_one_task, 0);
-    run(test_create_two_tasks, 0);
+    run(test_create_two_tasks, 1);
     return 0;
 }
