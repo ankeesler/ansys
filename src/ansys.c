@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +16,7 @@
 
 #define MAX_TASKS 10
 #define BOOT_TASK_PRIO 10
+#define STACK_SIZE 1024
 
 struct task {
     void (*fcn)(void *);
@@ -24,12 +26,12 @@ struct task {
     int started;
 
     ucontext_t ctx;
+    char stack[STACK_SIZE];
 };
 
 static struct task tasks[MAX_TASKS];
-static struct task *current_task;
-static volatile int sw_ctx = 0;
-static ucontext_t boot_ctx;
+static struct task *current_task, *boot_task;
+static ucontext_t boot_ctx, exit_task_ctx;
 
 static void init_tasks(void) {
     for (int i = 0; i < MAX_TASKS; i++) {
@@ -38,14 +40,25 @@ static void init_tasks(void) {
     current_task = NULL;
 }
 
+static void init_task(struct task *t, void (*fcn)(void *), void *input, int prio) {
+    t->fcn = fcn;
+    t->input = input;
+    t->prio = prio;
+    t->ready = 1;
+    t->started = 0;
+
+    assert(getcontext(&t->ctx) == 0);
+    t->ctx.uc_link = &exit_task_ctx;
+    sigemptyset(&t->ctx.uc_sigmask);
+    t->ctx.uc_stack.ss_sp = t->stack;
+    t->ctx.uc_stack.ss_size = sizeof(t->stack);
+    makecontext(&t->ctx, (void(*)(void))fcn, 1, input);
+}
+
 static struct task *add_task(void (*fcn)(void *), void *input, int prio) {
     for (int i = 0; i < MAX_TASKS; i++) {
         if (tasks[i].fcn == NULL) {
-            tasks[i].fcn = fcn;
-            tasks[i].input = input;
-            tasks[i].prio = prio;
-            tasks[i].ready = 1;
-            tasks[i].started = 0;
+            init_task(&tasks[i], fcn, input, prio);
             return &tasks[i];
         }
     }
@@ -69,44 +82,48 @@ static struct task *find_next_task(void) {
     return best;
 }
 
+static void delete_task(struct task *t) {
+    t->fcn = NULL;
+}
+
 static void ctxsw(struct task *next_task) {
-    assert(getcontext(&current_task->ctx) == 0);
-    if (sw_ctx) {
-        sw_ctx = 0;
+    struct task *previous_task = current_task;
+    current_task = next_task;
+    assert(swapcontext(&previous_task->ctx, &current_task->ctx) == 0);
+}
+
+static void manage_exit_task_ctx(void) {
+    static int init = 1;
+    assert(getcontext(&exit_task_ctx) == 0);
+    if (init) {
+        init  = 0;
         return;
     }
 
-    // This call will not return. Execution will transfer to ansys_boot()
-    // which will switch context again into the current_task. We are doing
-    // this because lateral context switches don't seem to be working.
-    current_task = next_task;
-    assert(setcontext(&boot_ctx) == 0);
+    // The current_task has just exited. Start the next one.
+    int boot_task_exited = (current_task == boot_task);
+    delete_task(current_task);
+    if (!boot_task_exited) {
+        ctxsw(find_next_task());
+    } else {
+        assert(setcontext(&boot_ctx) == 0);
+        exit(79);
+    }
 }
 
 int ansys_boot(void (*fcn)(void *), void *input) {
-    init_tasks();
-
-    struct task *boot_task = add_task(fcn, input, BOOT_TASK_PRIO);
+    static int booted = 0;
     assert(getcontext(&boot_ctx) == 0);
-    if (current_task == NULL) {
-        // We returned from a normal call to getcontext. This should only
-        // happen once (at boot).
-        current_task = boot_task;
-        current_task->started = 1;
-        boot_task->fcn(boot_task->input);
-    } else {
-        // We returned from getcontext as a result of a setcontext in ctxsw().
-        // current_task should have been set in ctxsw() above.
-        if (current_task->started == 0) {
-            current_task->started = 1;
-            current_task->fcn(current_task->input);
-        } else {
-            // This call will not return. It will switch context into the
-            // getcontext in ctxsw().
-            sw_ctx = 1;
-            assert(setcontext(&current_task->ctx) == 0);
-        }
+    if (booted) {
+        return ERR_BOOTRET;
     }
+    booted = 1;
+
+    init_tasks();
+    manage_exit_task_ctx();
+
+    current_task = boot_task = add_task(fcn, input, BOOT_TASK_PRIO);
+    assert(setcontext(&boot_task->ctx) == 0);
 
     return ERR_FAILURE;
 }

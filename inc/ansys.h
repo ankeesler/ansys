@@ -1,5 +1,6 @@
 #define ERR_SUCCESS 0
 #define ERR_FAILURE 1
+#define ERR_BOOTRET 2 /* the boot task returned */
 
 // Boot the system with a default task.
 // Should not return.
