@@ -3,4 +3,4 @@
 set -ex
 
 apt update
-apt install -y gcc make gdb
+apt install -y gcc make gdb g++

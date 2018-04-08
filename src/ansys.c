@@ -6,7 +6,7 @@
 
 #include <ucontext.h>
 
-#if 0
+#if 1
 #define note(...) printf(__VA_ARGS__), fflush(stdout);
 #else
 #define note(...)
@@ -16,7 +16,7 @@
 
 #define MAX_TASKS 10
 #define BOOT_TASK_PRIO 10
-#define STACK_SIZE 1024
+#define STACK_SIZE 16384
 
 struct task {
     void (*fcn)(void *);
@@ -107,20 +107,19 @@ static void manage_exit_task_ctx(void) {
         ctxsw(find_next_task());
     } else {
         assert(setcontext(&boot_ctx) == 0);
-        exit(79);
     }
 }
 
 int ansys_boot(void (*fcn)(void *), void *input) {
-    static int booted = 0;
-    assert(getcontext(&boot_ctx) == 0);
-    if (booted) {
-        return ERR_BOOTRET;
-    }
-    booted = 1;
-
+    memset(&boot_ctx, 0, sizeof(boot_ctx));
+    memset(&exit_task_ctx, 0, sizeof(exit_task_ctx));
     init_tasks();
     manage_exit_task_ctx();
+
+    assert(getcontext(&boot_ctx) == 0);
+    if (current_task != NULL) {
+        return ERR_BOOTRET;
+    }
 
     current_task = boot_task = add_task(fcn, input, BOOT_TASK_PRIO);
     assert(setcontext(&boot_task->ctx) == 0);
