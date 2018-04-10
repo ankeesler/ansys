@@ -32,6 +32,7 @@ TEST_F(AnsysFixture, TwoTasks) {
     expected.push(TestEvent::BOOT_STARTED);
     expected.push(TestEvent::TASK_A_STARTED);
     expected.push(TestEvent::TASK_B_STARTED);
+    expected.push(TestEvent::TASK_A_CONTINUED);
     expected.push(TestEvent::TASK_B_ENDED);
     expected.push(TestEvent::TASK_A_ENDED);
     expected.push(TestEvent::BOOT_ENDED);

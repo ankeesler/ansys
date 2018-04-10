@@ -9,6 +9,7 @@ enum TestEvent {
     BOOT_ENDED,
 
     TASK_A_STARTED,
+    TASK_A_CONTINUED,
     TASK_A_ENDED,
 
     TASK_B_STARTED,
