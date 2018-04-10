@@ -3,53 +3,50 @@
 
 #include "ansys_fixture.hpp"
 
-static void taskB(volatile TestData *data) {
-    data->output.taskBStarted = true;
-    data->output.taskBFinished = true;
+struct TestInput {
+    Ansys::Ansys sys;
+    bool runTaskA, runTaskB;
+};
+
+struct TestOutput {
+    Ansys::Status bootStatus;
+    std::queue<TestEvent> events;
+};
+
+struct TestData {
+    TestInput input;
+    TestOutput output;
+};
+
+static void taskB(TestData *data) {
+    data->output.events.push(TestEvent::TASK_B_STARTED);
+    data->output.events.push(TestEvent::TASK_B_ENDED);
 }
 
-static void taskA(volatile TestData *data) {
-    data->output.taskAStarted = true;
+static void taskA(TestData *data) {
+    data->output.events.push(TestEvent::TASK_A_STARTED);
     if (data->input.runTaskB) {
-        data->input.sys->CreateTask((void (*)(void *))taskB, (void *)data, 2);
+        data->input.sys.CreateTask((void (*)(void *))taskB, (void *)data, 2);
     }
-    data->output.taskAFinished = true;
+    data->output.events.push(TestEvent::TASK_A_ENDED);
 }
 
-static void bootTask(volatile TestData *data) {
-    data->output.bootStarted = true;
+static void bootTask(TestData *data) {
+    data->output.events.push(TestEvent::BOOT_STARTED);
     if (data->input.runTaskA) {
-        data->input.sys->CreateTask((void (*)(void *))taskA, (void *)data, 1);
+        data->input.sys.CreateTask((void (*)(void *))taskA, (void *)data, 1);
     }
-    data->output.bootFinished = true;
+    data->output.events.push(TestEvent::BOOT_ENDED);
 }
 
-static void sysRoutine(volatile TestData *data) {
-    data->output.bootStatus = data->input.sys->Boot((void (*)(void *))bootTask, (void *)data);
-    data->output.done = true;
-}
+void AnsysFixture::Run(bool runTaskA, bool runTaskB) {
+    TestData data;
+    data.input.runTaskA = runTaskA;
+    data.input.runTaskB = runTaskB;
 
-void AnsysFixture::Start(bool runTaskA, bool runTaskB) {
-    this->data.input.sys = &this->sys;
-    this->data.input.runTaskA = runTaskA;
-    this->data.input.runTaskB = runTaskB;
+    data.output.bootStatus = Ansys::UNKNOWN;
+    data.output.bootStatus = data.input.sys.Boot((void (*)(void *))bootTask, (void *)&data);
 
-    this->data.output.bootStatus = Ansys::UNKNOWN;
-    this->data.output.bootStarted = false;
-    this->data.output.bootFinished = false;
-
-    this->data.output.taskAStarted = false;
-    this->data.output.taskAFinished = false;
-
-    this->data.output.taskBStarted = false;
-    this->data.output.taskBFinished = false;
-
-    this->data.output.done = false;
-
-    this->sys_thread = new std::thread(sysRoutine, &this->data);
-}
-
-void AnsysFixture::TearDown(void) {
-    this->sys_thread->join();
-    delete this->sys_thread;
+    this->bootStatus = data.output.bootStatus;
+    this->events = data.output.events;
 }

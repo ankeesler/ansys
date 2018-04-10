@@ -1,38 +1,24 @@
+#include <queue>
 #include <thread>
 
 #include "gtest/gtest.h"
 #include "ansys.hpp"
 
-struct TestInput {
-    Ansys::Ansys *sys;
-    bool runTaskA, runTaskB;
-};
+enum TestEvent {
+    BOOT_STARTED,
+    BOOT_ENDED,
 
-struct TestOutput {
-    Ansys::Status bootStatus;
-    bool bootStarted, bootFinished;
+    TASK_A_STARTED,
+    TASK_A_ENDED,
 
-    bool taskAStarted, taskAFinished;
-
-    bool taskBStarted, taskBFinished;
-
-    bool done;
-};
-
-struct TestData {
-    TestInput input;
-    TestOutput output;
+    TASK_B_STARTED,
+    TASK_B_ENDED,
 };
 
 class AnsysFixture : public ::testing::Test {
     protected:
-        volatile TestData data;
+        void Run(bool runTaskA, bool runTaskB);
 
-        void Start(bool runTaskA, bool runTaskB);
-
-        virtual void TearDown(void);
-
-    private:
-        Ansys::Ansys sys;
-        std::thread *sys_thread;
+        Ansys::Status bootStatus;
+        std::queue<TestEvent> events;
 };

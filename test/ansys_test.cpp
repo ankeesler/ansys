@@ -1,54 +1,39 @@
 #include <ctime>
 #include <iostream>
+#include <queue>
 
 #include "ansys.hpp"
 #include "ansys_fixture.hpp"
 
-#define TIMEOUT_S 3
-
-#define WaitFor(a) \
-    do { \
-        time_t now = time(NULL); \
-        do { \
-            sleep(1); \
-            if ((time(NULL) - now) > TIMEOUT_S) { \
-                ASSERT_EQ(123, 456); \
-            } \
-        } while(!(a)); \
-    } while (0);
-
 TEST_F(AnsysFixture, BasicBoot) {
-    Start(false, false);
-    WaitFor(data.output.done);
-    EXPECT_EQ(data.output.bootStatus, Ansys::OK);
-    EXPECT_TRUE(data.output.bootStarted);
-    EXPECT_FALSE(data.output.taskAStarted);
-    EXPECT_FALSE(data.output.taskBStarted);
-    EXPECT_FALSE(data.output.taskBFinished);
-    EXPECT_FALSE(data.output.taskAFinished);
-    EXPECT_TRUE(data.output.bootFinished);
+    Run(false, false);
+    EXPECT_EQ(bootStatus, Ansys::OK);
+    std::queue<TestEvent> expected;
+    expected.push(TestEvent::BOOT_STARTED);
+    expected.push(TestEvent::BOOT_ENDED);
+    EXPECT_EQ(expected, events);
 }
 
 TEST_F(AnsysFixture, OneTask) {
-    Start(true, false);
-    WaitFor(data.output.done);
-    EXPECT_EQ(data.output.bootStatus, Ansys::OK);
-    EXPECT_TRUE(data.output.bootStarted);
-    EXPECT_TRUE(data.output.taskAStarted);
-    EXPECT_FALSE(data.output.taskBStarted);
-    EXPECT_FALSE(data.output.taskBFinished);
-    EXPECT_TRUE(data.output.taskAFinished);
-    EXPECT_TRUE(data.output.bootFinished);
+    Run(true, false);
+    EXPECT_EQ(bootStatus, Ansys::OK);
+    std::queue<TestEvent> expected;
+    expected.push(TestEvent::BOOT_STARTED);
+    expected.push(TestEvent::TASK_A_STARTED);
+    expected.push(TestEvent::TASK_A_ENDED);
+    expected.push(TestEvent::BOOT_ENDED);
+    EXPECT_EQ(expected, events);
 }
 
 TEST_F(AnsysFixture, TwoTasks) {
-    Start(true, true);
-    WaitFor(data.output.done);
-    EXPECT_EQ(data.output.bootStatus, Ansys::OK);
-    EXPECT_TRUE(data.output.bootStarted);
-    EXPECT_TRUE(data.output.taskAStarted);
-    EXPECT_TRUE(data.output.taskBStarted);
-    EXPECT_TRUE(data.output.taskBFinished);
-    EXPECT_TRUE(data.output.taskAFinished);
-    EXPECT_TRUE(data.output.bootFinished);
+    Run(true, true);
+    EXPECT_EQ(bootStatus, Ansys::OK);
+    std::queue<TestEvent> expected;
+    expected.push(TestEvent::BOOT_STARTED);
+    expected.push(TestEvent::TASK_A_STARTED);
+    expected.push(TestEvent::TASK_B_STARTED);
+    expected.push(TestEvent::TASK_B_ENDED);
+    expected.push(TestEvent::TASK_A_ENDED);
+    expected.push(TestEvent::BOOT_ENDED);
+    EXPECT_EQ(expected, events);
 }
