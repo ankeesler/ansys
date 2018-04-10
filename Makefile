@@ -30,8 +30,11 @@ bin/gtest_main.a: test/googletest/googletest/make/gtest_main.a | bin
 bin/%.o: test/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
 
-bin/%-cpp.o: test/%.cpp | bin
-	$(CXX) -o $@ $(CXXFLAGS) -Itest/googletest/googletest/include/ -c $^
+bin/ansys_fixture-cpp.o: test/ansys_fixture.cpp test/ansys_fixture.hpp | bin
+	$(CXX) -o $@ $(CXXFLAGS) -Itest/googletest/googletest/include/ -c $<
+
+bin/ansys_test-cpp.o: test/ansys_test.cpp test/ansys_fixture.hpp | bin
+	$(CXX) -o $@ $(CXXFLAGS) -Itest/googletest/googletest/include/ -c $<
 
 bin/%.o: src/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^

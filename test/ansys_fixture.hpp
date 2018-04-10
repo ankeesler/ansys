@@ -5,7 +5,7 @@
 
 struct TestInput {
     Ansys::Ansys *sys;
-    bool runTaskA;
+    bool runTaskA, runTaskB;
 };
 
 struct TestOutput {
@@ -13,6 +13,8 @@ struct TestOutput {
     bool bootStarted, bootFinished;
 
     bool taskAStarted, taskAFinished;
+
+    bool taskBStarted, taskBFinished;
 
     bool done;
 };
@@ -26,7 +28,7 @@ class AnsysFixture : public ::testing::Test {
     protected:
         volatile TestData data;
 
-        void Start(bool runTaskA);
+        void Start(bool runTaskA, bool runTaskB);
 
         virtual void TearDown(void);
 

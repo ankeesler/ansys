@@ -3,8 +3,16 @@
 
 #include "ansys_fixture.hpp"
 
+static void taskB(volatile TestData *data) {
+    data->output.taskBStarted = true;
+    data->output.taskBFinished = true;
+}
+
 static void taskA(volatile TestData *data) {
     data->output.taskAStarted = true;
+    if (data->input.runTaskB) {
+        data->input.sys->CreateTask((void (*)(void *))taskB, (void *)data, 2);
+    }
     data->output.taskAFinished = true;
 }
 
@@ -21,9 +29,10 @@ static void sysRoutine(volatile TestData *data) {
     data->output.done = true;
 }
 
-void AnsysFixture::Start(bool runTaskA) {
+void AnsysFixture::Start(bool runTaskA, bool runTaskB) {
     this->data.input.sys = &this->sys;
     this->data.input.runTaskA = runTaskA;
+    this->data.input.runTaskB = runTaskB;
 
     this->data.output.bootStatus = Ansys::UNKNOWN;
     this->data.output.bootStarted = false;
@@ -31,6 +40,9 @@ void AnsysFixture::Start(bool runTaskA) {
 
     this->data.output.taskAStarted = false;
     this->data.output.taskAFinished = false;
+
+    this->data.output.taskBStarted = false;
+    this->data.output.taskBFinished = false;
 
     this->data.output.done = false;
 

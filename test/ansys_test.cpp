@@ -18,24 +18,37 @@
     } while (0);
 
 TEST_F(AnsysFixture, BasicBoot) {
-    Start(false);
+    Start(false, false);
     WaitFor(data.output.done);
     EXPECT_EQ(data.output.bootStatus, Ansys::OK);
     EXPECT_TRUE(data.output.bootStarted);
+    EXPECT_FALSE(data.output.taskAStarted);
+    EXPECT_FALSE(data.output.taskBStarted);
+    EXPECT_FALSE(data.output.taskBFinished);
+    EXPECT_FALSE(data.output.taskAFinished);
     EXPECT_TRUE(data.output.bootFinished);
 }
 
 TEST_F(AnsysFixture, OneTask) {
-    Start(true);
+    Start(true, false);
     WaitFor(data.output.done);
     EXPECT_EQ(data.output.bootStatus, Ansys::OK);
     EXPECT_TRUE(data.output.bootStarted);
     EXPECT_TRUE(data.output.taskAStarted);
+    EXPECT_FALSE(data.output.taskBStarted);
+    EXPECT_FALSE(data.output.taskBFinished);
     EXPECT_TRUE(data.output.taskAFinished);
     EXPECT_TRUE(data.output.bootFinished);
 }
 
 TEST_F(AnsysFixture, TwoTasks) {
-    Start(true);
+    Start(true, true);
     WaitFor(data.output.done);
+    EXPECT_EQ(data.output.bootStatus, Ansys::OK);
+    EXPECT_TRUE(data.output.bootStarted);
+    EXPECT_TRUE(data.output.taskAStarted);
+    EXPECT_TRUE(data.output.taskBStarted);
+    EXPECT_TRUE(data.output.taskBFinished);
+    EXPECT_TRUE(data.output.taskAFinished);
+    EXPECT_TRUE(data.output.bootFinished);
 }
