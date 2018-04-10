@@ -2,7 +2,8 @@
 
 namespace Ansys {
 
-Status Ansys::Boot(void (*boot_task)(void *), void *input) {
+Status Ansys::Boot(void (*bootTask)(void *), void *input) {
+    bootTask(input);
     return OK;
 }
 

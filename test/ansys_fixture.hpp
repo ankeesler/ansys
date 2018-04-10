@@ -3,19 +3,28 @@
 #include "gtest/gtest.h"
 #include "ansys.hpp"
 
-class TestResult {
-    public:
-        TestResult(void) : bootStatus(Ansys::UNKNOWN), done(false) { }
+struct TestInput {
+};
 
-        Ansys::Status bootStatus;
-        bool bootStarted;
-        bool bootFinished;
-        bool done;
+
+struct TestOutput {
+    Ansys::Status bootStatus;
+    bool bootStarted, bootFinished;
+
+    bool done;
+};
+
+struct TestData {
+    TestInput input;
+    TestOutput output;
 };
 
 class AnsysFixture : public ::testing::Test {
+    public:
+        AnsysFixture(void);
+
     protected:
-        volatile TestResult result;
+        volatile TestData data;
 
         virtual void SetUp(void);
         virtual void TearDown(void);

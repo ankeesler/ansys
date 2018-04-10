@@ -18,8 +18,10 @@
     } while (0);
 
 TEST_F(AnsysFixture, BasicBoot) {
-    WaitFor(result.done);
-    EXPECT_EQ(result.bootStatus, Ansys::OK);
+    WaitFor(data.output.done);
+    EXPECT_EQ(data.output.bootStatus, Ansys::OK);
+    EXPECT_TRUE(data.output.bootStarted);
+    EXPECT_TRUE(data.output.bootFinished);
 }
 
 TEST_F(AnsysFixture, OneTask) {
