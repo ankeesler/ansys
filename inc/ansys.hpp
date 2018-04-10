@@ -10,7 +10,8 @@ enum Status {
 
 class Ansys {
     public:
-        Status Boot(void (*bootTask)(void *), void *input);
+        Status Boot(void (*bootTask)(void *input), void *input);
+        Status CreateTask(void (*fcn)(void *input), void *input, int prio);
 };
 
 } // namespace Ansys

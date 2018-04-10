@@ -4,12 +4,15 @@
 #include "ansys.hpp"
 
 struct TestInput {
+    Ansys::Ansys *sys;
+    bool runTaskA;
 };
-
 
 struct TestOutput {
     Ansys::Status bootStatus;
     bool bootStarted, bootFinished;
+
+    bool taskAStarted, taskAFinished;
 
     bool done;
 };
@@ -20,13 +23,11 @@ struct TestData {
 };
 
 class AnsysFixture : public ::testing::Test {
-    public:
-        AnsysFixture(void);
-
     protected:
         volatile TestData data;
 
-        virtual void SetUp(void);
+        void Start(bool runTaskA);
+
         virtual void TearDown(void);
 
     private:
