@@ -9,7 +9,12 @@ namespace Ansys {
 
 class Task {
     public:
-        Task(void (*fcn)(void *), void *input, int prio);
+        Task(void (*fcn)(void *), void *input, int prio, ucontext_t *exitCtx);
+
+        int Prio(void) { return this->prio; }
+        bool Ready(void) { return this->ready; }
+        void SetReady(bool ready) { this->ready = ready; }
+        ucontext_t& Ctx(void) { return this->ctx; }
 
     private:
         void (*fcn)(void *);
