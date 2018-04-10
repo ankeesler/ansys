@@ -5,7 +5,7 @@ endif
 CC=gcc
 CXX=g++
 CFLAGS=-g -Wall -Werror -O0 -Iinc
-CXXFLAGS=-g -Wall -Werror -O0 -Iinc
+CXXFLAGS=-g -Wall -Werror -O0 -Iinc -std=c++11
 
 all: help
 
@@ -31,7 +31,7 @@ bin/%.o: test/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
 
 bin/%-cpp.o: test/%.cpp | bin
-	$(CXX) -o $@ $(CXXFLAGS) -Itest/googletest/googletest/include/ -c $^ -std=c++11
+	$(CXX) -o $@ $(CXXFLAGS) -Itest/googletest/googletest/include/ -c $^
 
 bin/%.o: src/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
@@ -45,7 +45,7 @@ bin/%.o: example/%.c | bin
 bin/ansys_test: bin/ansys.o bin/ansys_test.o bin/test.o
 	$(CC) -o $@ $^ -lpthread
 
-bin/ansys_cpp_test: bin/ansys-cpp.o bin/ansys_test-cpp.o bin/gtest_main.a
+bin/ansys_cpp_test: bin/ansys-cpp.o bin/ansys_test-cpp.o bin/gtest_main.a bin/ansys_fixture-cpp.o
 	$(CXX) -o $@ $^ -lpthread
 
 bin/example: bin/ansys.o bin/example.o

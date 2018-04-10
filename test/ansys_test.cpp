@@ -1,32 +1,25 @@
-#include <thread>
+#include <ctime>
+#include <iostream>
 
-#include "gtest/gtest.h"
 #include "ansys.hpp"
+#include "ansys_fixture.hpp"
 
-class AnsysFixture : public ::testing::Test {
-    protected:
-        Ansys::Ansys sys;
-        Ansys::Status bootStatus;
+#define TIMEOUT_S 3
 
-        void SetUp(void) {
-            this->sys_thread = new std::thread(sys_routine, std::ref(this->sys), &this->bootStatus);
-        }
-
-        virtual void TearDown(void) {
-            this->sys_thread->join();
-            delete this->sys_thread;
-        }
-
-    private:
-        std::thread *sys_thread;
-
-        static void sys_routine(Ansys::Ansys& sys, Ansys::Status *bootStatus) {
-            *bootStatus = sys.Boot(nullptr, nullptr);
-        }
-};
+#define WaitFor(a) \
+    do { \
+        time_t now = time(NULL); \
+        do { \
+            sleep(1); \
+            if ((time(NULL) - now) > TIMEOUT_S) { \
+                ASSERT_EQ(123, 456); \
+            } \
+        } while(!(a)); \
+    } while (0);
 
 TEST_F(AnsysFixture, BasicBoot) {
-    EXPECT_EQ(Ansys::OK, bootStatus);
+    WaitFor(result.done);
+    EXPECT_EQ(result.bootStatus, Ansys::OK);
 }
 
 TEST_F(AnsysFixture, OneTask) {
