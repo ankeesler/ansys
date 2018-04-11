@@ -42,15 +42,16 @@ bin/%.o: src/%.c | bin
 bin/%-cpp.o: src/%.cpp | bin
 	$(CXX) -o $@ $(CXXFLAGS) -c $^
 
+bin/libansys.a: bin/Ansys-cpp.o bin/Task-cpp.o | bin
+	ar rcs $@ $^
+
 bin/%.o: example/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
 
 bin/ansys_test: bin/ansys.o bin/ansys_test.o bin/test.o
 	$(CC) -o $@ $^ -lpthread
 
-bin/ansys_cpp_test: \
-	bin/Ansys-cpp.o bin/ansys_test-cpp.o bin/gtest_main.a \
-	bin/ansys_fixture-cpp.o bin/Task-cpp.o
+bin/ansys_cpp_test: bin/libansys.a bin/gtest_main.a bin/ansys_fixture-cpp.o bin/ansys_test-cpp.o
 	$(CXX) -o $@ $^ -lpthread
 
 bin/example: bin/ansys.o bin/example.o

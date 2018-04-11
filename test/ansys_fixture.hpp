@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "gtest/gtest.h"
-#include "ansys.hpp"
+#include "Ansys.hpp"
 
 enum TestEvent {
     BOOT_STARTED,

@@ -3,7 +3,7 @@
 #include <list>
 #include <ucontext.h>
 
-#include "ansys.hpp"
+#include "Ansys.hpp"
 
 namespace Ansys {
 

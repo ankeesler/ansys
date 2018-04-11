@@ -2,7 +2,7 @@
 #include <iostream>
 #include <queue>
 
-#include "ansys.hpp"
+#include "Ansys.hpp"
 #include "ansys_fixture.hpp"
 
 TEST_F(AnsysFixture, BasicBoot) {
