@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <list>
 #include <ucontext.h>
 
 #include "ansys.hpp"
@@ -45,7 +46,7 @@ Task *Ansys::addTask(void (*fcn)(void *), void *input, int prio) {
 
 Task *Ansys::findNextTask(void) {
     Task *best = nullptr;
-    for (std::list<Task*>::iterator it; it != this->tasks.end(); it++) {
+    for (std::list<Task*>::iterator it = this->tasks.begin(); it != this->tasks.end(); it++) {
         if ((*it)->Ready() && (best == nullptr || (*it)->Prio() < best->Prio())) {
             best = *it;
         }
@@ -58,6 +59,7 @@ Task *Ansys::findNextTask(void) {
 }
 
 void Ansys::deleteTask(Task *t) {
+    this->tasks.remove(t);
     delete t;
 }
 
