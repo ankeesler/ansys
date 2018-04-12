@@ -27,14 +27,17 @@ bin/%.o: src/%.c | bin
 bin/%.o: example/%.c | bin
 	$(CC) -o $@ $(CFLAGS) -c $^
 
-bin/ansys_test: bin/ansys.o bin/ansys_test.o bin/test.o
-	$(CC) -o $@ $^ -lpthread
+bin/libansys.a: bin/ansys.o bin/task.o
+	ar rcs $@ $^
 
-bin/example: bin/ansys.o bin/example.o
-	$(CC) -o $@ $^
+bin/ansys_test: bin/ansys_test.o bin/test.o | bin/libansys.a
+	$(CC) -o $@ $^ -lpthread -Lbin -lansys
 
-bin/example-multithread: bin/ansys.o bin/example-multithread.o
-	$(CC) -o $@ $^ -lpthread
+bin/example: bin/example.o | bin/libansys.a
+	$(CC) -o $@ $^ -Lbin -lansys
+
+bin/example-multithread: bin/example-multithread.o | bin/libansys.a
+	$(CC) -o $@ $^ -lpthread -Lbin -lansys
 
 .PHONY: test
 test: bin/ansys_test
