@@ -128,7 +128,7 @@ static void test_create_two_tasks(void) {
 }
 
 int main(int argc, char *argv[]) {
-    run(test_basic_boot, 0);
+    run(test_basic_boot, 1);
     run(test_create_one_task, 1);
     run(test_create_two_tasks, 1);
     return 0;

@@ -93,10 +93,8 @@ static void ctxsw(struct task *next_task) {
 }
 
 static void manage_exit_task_ctx(void) {
-    static int init = 1;
     assert(getcontext(&exit_task_ctx) == 0);
-    if (init) {
-        init  = 0;
+    if (current_task == NULL) {
         return;
     }
 
@@ -111,8 +109,6 @@ static void manage_exit_task_ctx(void) {
 }
 
 int ansys_boot(void (*fcn)(void *), void *input) {
-    memset(&boot_ctx, 0, sizeof(boot_ctx));
-    memset(&exit_task_ctx, 0, sizeof(exit_task_ctx));
     init_tasks();
     manage_exit_task_ctx();
 
